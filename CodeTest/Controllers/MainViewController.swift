@@ -5,45 +5,51 @@ class MainViewController: UIViewController {
     //MARK: - Variables and constants
     let usersTableView = UITableView()
     let tableViewCellID = "cell"
-    let api = API()
+    let parcer = Parcer()
     let uiConf = UIConfigurator()
     let udService = UserDefaultsService()
     var dataArray : [UserElement] = []
+    
+    private let urlString = "https://jsonplaceholder.typicode.com/users"
 
     //MARK: - viewDidLoad
     override func viewDidLoad() {
         super.viewDidLoad()
         
         prepareUsersData()
-        prepareTableView()
+        prepareTableView(tableView: usersTableView)
+        
     }
     
     //MARK: - Prepare funcs
-    func prepareTableView() {
-        uiConf.tableViewConfigure(view: view, tableView: usersTableView, cellID: tableViewCellID, sender: self)
+    func prepareUsersData() {
+        if let loadedFromMemoryData = udService.loadUsersData() {
+            dataArray = loadedFromMemoryData
+            print("Users data loaded from memory")
+        } else {
+            downloadUsersData()
+            print("Users data loaded from internet")
+        }
+        
     }
     
-    func prepareUsersData() {
-        if let data = udService.loadUsersData() {
-            dataArray = data
-            usersTableView.reloadData()
-        } else {
-            downloadUserData()
-        }
+    func prepareTableView(tableView: UITableView) {
+        uiConf.tableViewConfigure(tableView: usersTableView, cellID: tableViewCellID, sender: self)
     }
+    
     
     //MARK: - API interaction
-    func downloadUserData() {
-        api.fetchData { users in
-            self.dataArray = users
+    func downloadUsersData() {
+        parcer.fetchData(urlString: urlString) { downloadedData in
+            if let downloadedData = downloadedData {
+                self.dataArray = downloadedData
+            }
             DispatchQueue.main.async {
-                self.udService.saveUsersData(data: self.dataArray)
                 self.usersTableView.reloadData()
             }
         }
     }
     
-
 }
 
 
@@ -65,11 +71,17 @@ extension MainViewController: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let vc = DetailsViewController(user: dataArray[indexPath.row])
+        let vc = DetailsViewController()
+        vc.currentUser = dataArray[indexPath.row]
         present(vc, animated: true)
+        
         tableView.deselectRow(at: indexPath, animated: true)
     }
     
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        return "Users"
+    }
+
 }
 
 

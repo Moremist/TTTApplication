@@ -2,7 +2,7 @@ import UIKit
 
 class DetailsViewController: UIViewController {
     //MARK: - Variables and constants
-    var currentUser: UserElement!
+    var currentUser: UserElement?
     var userDataArray : [String] = []
     let detailTableView : UITableView = {
         let tableView = UITableView()
@@ -11,17 +11,9 @@ class DetailsViewController: UIViewController {
     }()
     let tableViewCellID = "detailCell"
     let uiConf = UIConfigurator()
-
-    //MARK: - Init modify
-    init(user: UserElement) {
-        super.init(nibName: nil, bundle: nil)
-        currentUser = user
-    }
     
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
-        currentUser = API.shared.errorUser
-    }
+    let errorUser = UserElement(id: 0, name: "Error", username: "Error", email: "Error", address: Address(street: "Error", suite: "Error", city: "Error", zipcode: "Error", geo: Geo(lat: "Error", lng: "Error")), phone: "Error", website: "Error", company: Company(name: "Error", catchPhrase: "Error", bs: "Error"))
+
     
     //MARK: - viewDidLoad
     override func viewDidLoad() {
@@ -33,11 +25,10 @@ class DetailsViewController: UIViewController {
     }
     
     //MARK: - Prepare funcs
-    func prepareTableView() {
-        uiConf.tableViewConfigure(view: view, tableView: detailTableView, cellID: tableViewCellID, sender: self)
-    }
-    
+
     func prepareUserArray() {
+        let currentUser = currentUser ?? errorUser
+        userDataArray.append("Username: " + currentUser.username)
         userDataArray.append("Name: " + currentUser.name)
         userDataArray.append("Phone: " + currentUser.phone)
         userDataArray.append("Email: " + currentUser.email)
@@ -46,6 +37,11 @@ class DetailsViewController: UIViewController {
         userDataArray.append("City: " + currentUser.address.city)
 
     }
+    
+    func prepareTableView() {
+        uiConf.tableViewConfigure(tableView: detailTableView, cellID: tableViewCellID, sender: self)
+    }
+    
     
 }
 
@@ -64,5 +60,8 @@ extension DetailsViewController: UITableViewDelegate, UITableViewDataSource {
         return cell
     }
     
-    
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        return "Data"
+    }
+
 }
